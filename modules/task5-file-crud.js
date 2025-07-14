@@ -2,147 +2,140 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 
-// Fungsi inisialisasi direktori data
-function initDataDir(dataDir) {
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir);
-  }
-  return dataDir;
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+const dataDir = path.join(__dirname, 'data');
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir);
 }
 
-// Fungsi membuat file
-function createFile(dataDir, filename, content) {
-  return new Promise((resolve, reject) => {
-    const filePath = path.join(dataDir, filename);
-    fs.writeFile(filePath, content, (err) => {
-      if (err) reject(err);
-      else resolve('File created successfully');
-    });
-  });
-}
+function showMenu () {
+    console.log("\n===== Welcome to CRUD File Operations =====");
+    console.log("1. Create File");
+    console.log("2. Read File");
+    console.log("3. Update File");
+    console.log("4. Delete File");
+    console.log("5. Exit");
 
-// Fungsi membaca file
-function readFile(dataDir, filename) {
-  return new Promise((resolve, reject) => {
+    rl.question("Pilih salah satu Program dibawah ini:", (answer) => {
+        switch (answer) {
+            case '1':
+                createFile();
+                break;
+            case '2':
+                readFile();    
+                break;
+            case '3':
+                updateFile();
+                break;
+            case '4':
+                deleteFile();
+                break;
+            case '5':
+                rl.close();
+                break;        
+            default:
+                console.log("Error: Invalid Input!");
+                showMenu()
+        }
+    })
+};
+
+function readFile() {
+  rl.question('Enter filename to read: ', (filename) => {
     const filePath = path.join(dataDir, filename);
+    
+    if (!fs.existsSync(filePath)) {
+      console.log('File not found!');
+      return showMenu();
+    }
+    
     fs.readFile(filePath, 'utf8', (err, data) => {
-      if (err) reject(err);
-      else resolve(data);
-    });
-  });
-}
-
-// Fungsi mengupdate file
-function updateFile(dataDir, filename, newContent) {
-  return createFile(dataDir, filename, newContent);
-}
-
-// Fungsi menghapus file
-function deleteFile(dataDir, filename) {
-  return new Promise((resolve, reject) => {
-    const filePath = path.join(dataDir, filename);
-    fs.unlink(filePath, (err) => {
-      if (err) reject(err);
-      else resolve('File deleted successfully');
-    });
-  });
-}
-
-// Fungsi untuk menampilkan menu
-function setupMenu(dataDir) {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
-
-  function showMenu() {
-    console.log('\nFile CRUD Operations:');
-    console.log('1. Create file');
-    console.log('2. Read file');
-    console.log('3. Update file');
-    console.log('4. Delete file');
-    console.log('5. Exit');
-
-    rl.question('Choose option: ', handleMenuChoice);
-  }
-
-  async function handleMenuChoice(choice) {
-    try {
-      switch (choice) {
-        case '1':
-          await handleCreate();
-          break;
-        case '2':
-          await handleRead();
-          break;
-        case '3':
-          await handleUpdate();
-          break;
-        case '4':
-          await handleDelete();
-          break;
-        case '5':
-          rl.close();
-          return;
-        default:
-          console.log('Invalid choice!');
+      if (err) {
+        console.error('Error reading file:', err);
+      } else {
+        console.log('\nFile content:');
+        console.log(data);
       }
-    } catch (err) {
-      console.error('Error:', err.message);
-    }
-    showMenu();
-  }
-
-  async function handleCreate() {
-    const filename = await askQuestion('Enter filename: ');
-    const content = await askQuestion('Enter content: ');
-    const result = await createFile(dataDir, filename, content);
-    console.log(result);
-  }
-
-  async function handleRead() {
-    const filename = await askQuestion('Enter filename to read: ');
-    const content = await readFile(dataDir, filename);
-    console.log('\nFile content:');
-    console.log(content);
-  }
-
-  async function handleUpdate() {
-    const filename = await askQuestion('Enter filename to update: ');
-    const content = await askQuestion('Enter new content: ');
-    const result = await updateFile(dataDir, filename, content);
-    console.log(result);
-  }
-
-  async function handleDelete() {
-    const filename = await askQuestion('Enter filename to delete: ');
-    const result = await deleteFile(dataDir, filename);
-    console.log(result);
-  }
-
-  function askQuestion(question) {
-    return new Promise((resolve) => {
-      rl.question(question, resolve);
-    });
-  }
-
-  return {
-    start: () => {
-      console.log('File CRUD Application');
       showMenu();
-      
-      rl.on('close', () => {
-        console.log('\nGoodbye!');
-        process.exit(0);
-      });
-    }
-  };
+    });
+  });
 }
+
+function createFile () {
+    rl.question("Enter a filename:", (fileName) => {
+        const filePath = path.join(dataDir, fileName)
+
+        if (fs.existsSync(filePath)) {
+            console.log("This File already exist.")
+            return showMenu();
+        }
+
+        rl.question("Enter file content:", (content) => {
+            fs.writeFile(filePath, content, (err) => {
+
+          
+            if (err) {
+                console.log("Error creating File", err);
+            } else {
+                console.log("Create File Successfully");
+            }
+            showMenu();
+      });
+    });
+  });
+}
+
+function updateFile() {
+  rl.question('Enter filename to update: ', (filename) => {
+    const filePath = path.join(dataDir, filename);
+    
+    if (!fs.existsSync(filePath)) {
+      console.log('File not found!');
+      return showMenu();
+    }
+    
+    rl.question('Enter new content: ', (newContent) => {
+      fs.writeFile(filePath, newContent, (err) => {
+        if (err) {
+          console.error('Error updating file:', err);
+        } else {
+          console.log('File updated successfully!');
+        }
+        showMenu();
+      });
+    });
+  });
+}
+
+function deleteFile () {
+    rl.question("Masukkan nama File yang ingin di Delete:", (fileName) => {
+         const filePath = path.join(dataDir,  fileName);
+
+        if (!fs.existsSync(filePath)){
+            console.log("Data File tidak ditemukan!");
+            return showMenu();
+          }
+    
+
+     fs.unlink((filePath), (err) => {
+      if (err) {
+        console.error('Error deleting file:', err);
+      } else {
+        console.log('File deleted successfully!');
+      }
+      showMenu();
+    });
+})}
+
 
 module.exports = {
-  initDataDir,
+  showMenu,
   createFile,
   readFile,
   updateFile,
-  deleteFile,
+  deleteFile
 };
