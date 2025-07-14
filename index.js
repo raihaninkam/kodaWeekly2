@@ -1,16 +1,21 @@
-
 const path = require('path');
 const promiseTask = require('./modules/task1-promise');
 const callbackTask = require('./modules/task2-callback');
 const fetchTask = require('./modules/task3-fetch');
 const divideSortTask = require('./modules/task4-divide-sort');
 const { 
-  initDataDir,
+  showMenu,
   createFile,
   readFile,
   updateFile,
   deleteFile
 } = require('./modules/task5-file-crud');
+const readline = require('readline');
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
 
 async function runAllTasks() {
     try {
@@ -30,12 +35,14 @@ async function runAllTasks() {
         console.log(divideSortTask.divideAndSort(5956560159466056));
         
         console.log("\n=== Task 5: File CRUD ===");
-        const dataDir = initDataDir(path.join(__dirname, 'data'));
+        
+        console.log('File CRUD Application');
+        await showMenu();
 
-        await createFile(dataDir, 'test.txt', 'Hello World');
-        const content = await readFile(dataDir, 'test.txt');
-        console.log('File content:', content);
-        await deleteFile(dataDir, 'test.txt');
+        rl.on('close', () => {
+        console.log('\nGoodbye!');
+        process.exit(0);
+});
     } catch(err) {
         console.error('Error:', err.message);
     }
